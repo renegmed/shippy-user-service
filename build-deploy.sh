@@ -15,6 +15,7 @@ docker run --net="host" \
 		-e DB_USER=postgres \
 		-e MICRO_SERVER_ADDRESS=:50051 \
 		-e MICRO_REGISTRY=mdns \
+		-e DISABLE_AUTH=false \
         shippy-user-service
 
  
