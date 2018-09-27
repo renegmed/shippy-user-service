@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 
+	"github.com/micro/go-micro/broker"
 	pb "github.com/renegmed/shippy-user-service/proto/auth"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/net/context"
@@ -15,6 +17,7 @@ const topic = "user.created"
 type service struct {
 	repo         Repository
 	tokenService Authable
+	PubSub       broker.Broker
 }
 
 func (srv *service) Get(ctx context.Context, req *pb.User, res *pb.Response) error {
@@ -72,18 +75,35 @@ func (srv *service) Create(ctx context.Context, req *pb.User, res *pb.Response) 
 		return errors.New(fmt.Sprintf("error creating user: %v", err))
 	}
 
-	token, err := srv.tokenService.Encode(req)
+	res.User = req
+	if err := srv.publishEvent(req); err != nil {
+		//if err := srv.Publisher.Publish(ctx, req); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (srv *service) publishEvent(user *pb.User) error {
+
+	// Marshal to JSON string
+	body, err := json.Marshal(user)
 	if err != nil {
 		return err
 	}
 
-	res.User = req
-	res.Token = &pb.Token{Token: token}
+	// Create a broker message
+	msg := &broker.Message{
+		Header: map[string]string{
+			"id": user.Id,
+		},
+		Body: body,
+	}
 
-	/*
-		if err := srv.Publisher.Publish(ctx, req); err != nil {
-			return errors.New(fmt.Sprintf("error publishing event: %v", err))
-		}*/
+	// Publish message to broker
+	if err := srv.PubSub.Publish(topic, msg); err != nil {
+		log.Printf("[pub] faile: %v\n", err)
+	}
 
 	return nil
 }
