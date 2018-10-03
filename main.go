@@ -41,13 +41,13 @@ func main() {
 	srv.Init()
 
 	// Get instance of the broker using our defaults
-	pubsub := srv.Server().Options().Broker
+	//pubsub := srv.Server().Options().Broker
 
 	// Will comment this out now to save having to run this locally
 	//publisher := micro.NewPublisher("user.created", srv.Client())
 
 	// Register handler
-	pb.RegisterAuthHandler(srv.Server(), &service{repo, tokenService, pubsub})
+	pb.RegisterAuthHandler(srv.Server(), &service{repo, tokenService})
 
 	// Run the server
 	if err := srv.Run(); err != nil {

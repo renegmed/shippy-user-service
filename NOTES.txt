@@ -1,0 +1,50 @@
+
+Part 6 - Create Versatile Microservices in Golang - Web Clients
+
+
+$ docker run -d -p 5432:5432 postgres
+
+$ docker run -d -p 27017:27017 mongo
+
+
+$ go get -u github.com/micro/micro 
+
+$ docker pull microhq/micro 
+
+$ docker run -p 8080:8080 -e MICRO_REGISTRY=mdns microhq/micro api --handler=rpc  --address=:8080 --namespace=go.micro.srv
+
+
+
+Create a user:
+
+$ curl -XPOST -H 'Content-Type: application/json' -d '{ "service": "go.micro.srv.auth", "method": "Auth.Create", "request": { "user": { "email": "ewan.valentine89@gmail.com", "password": "testing123", "name": "Ewan Valentine", "company": "BBC" } } }' http://localhost:8080/rpc
+
+Result:
+
+{"user":{"id":"46ed2147-22e6-4570-99aa-5a0434d4cddd","password":"$2a$10$vsA2pBIMpRajz5G1zRAhDuQptwh36SqFEIDGlWxuzPN0aGrNYgNY."},"token":{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VyIjp7ImlkIjoiNDZlZDIxNDctMjJlNi00NTcwLTk5YWEtNWEwNDM0ZDRjZGRkIiwicGFzc3dvcmQiOiIkMmEkMTAkdnNBMnBCSU1wUmFqejVHMXpSQWhEdVFwdHdoMzZTcUZFSURHbFd4dXpQTjBhR3JOWWdOWS4ifSwiZXhwIjoxNTM4NTg1NTM2LCJpc3MiOiJzaGlwcHkudXNlciJ9.cVfFF1PxhxV9o2jGb2hdli0n8aSMn8AJStllar_z6H8"}}
+
+
+
+
+Authenticate a user:
+
+$ curl -XPOST -H 'Content-Type: application/json' -d '{ "service": "go.micro.srv.auth", "method": "Auth.Auth", "request":  { "email": "your@email.com", "password": "SomePass" } }'  http://localhost:8080/rpc
+
+Result: 
+
+"id":"go.micro.rpc","code":500,"detail":"error during request: record not found","status":"Internal Server Error"}
+
+
+
+Consignment service
+
+$ curl -XPOST -H 'Content-Type: application/json' \ 
+    -d '{
+      "service": "shippy.consignment",
+      "method": "ConsignmentService.Create",
+      "request": {
+        "description": "This is a test",
+        "weight": "500",
+        "containers": []
+      }
+    }' --url http://localhost:8080/rpc
